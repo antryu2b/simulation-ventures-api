@@ -14,7 +14,7 @@ import os
 load_dotenv()
 
 # 라우터
-from app.routes import simshield, alpharisk
+from app.routes import simshield, alpharisk, powergraph
 
 # 로깅 설정
 logging.basicConfig(
@@ -43,6 +43,7 @@ app.add_middleware(
 # 라우터 등록
 app.include_router(simshield.router)
 app.include_router(alpharisk.router)
+app.include_router(powergraph.router)
 
 @app.get("/health")
 async def health_check():
