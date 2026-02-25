@@ -7,6 +7,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
+from dotenv import load_dotenv
+import os
+
+# .env 파일 로드
+load_dotenv()
 
 # 라우터
 from app.routes import simshield
@@ -65,6 +70,13 @@ async def startup_event():
     logger.info("🚀 SimVentures API Starting...")
     logger.info("📊 Products: SimShield | AlphaRisk | PowerGraph")
     logger.info("📖 Swagger Docs: http://localhost:8000/docs")
+    
+    # FRED API 키 확인
+    fred_key = os.getenv("FRED_API_KEY", "demo")
+    if fred_key != "demo":
+        logger.info(f"✅ FRED API 키 설정: {fred_key[:8]}...")
+    else:
+        logger.warning("⚠️ FRED API 데모 키 사용 (제한됨)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
