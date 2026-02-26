@@ -11,6 +11,8 @@ import logging
 from app.models import SimulationRequest, SimulationResult, ScenarioResult
 from app.services.fred_client import get_fred_client
 from app.services.simulation_engine import get_simulation_engine
+from app.services.supabase_client import get_simshield_data, save_simshield_data
+from app.services.fred_to_supabase import populate_simshield_data
 
 router = APIRouter(prefix="/api/simshield", tags=["SimShield"])
 logger = logging.getLogger(__name__)
@@ -27,25 +29,35 @@ async def simshield_health():
 
 @router.get("/data")
 async def get_economic_data(
-    start_date: Optional[str] = "2010-01-01",
-    end_date: Optional[str] = None,
+    scenario: Optional[str] = "baseline",
+    refresh: bool = False,
 ):
     """
-    경제 데이터 조회 (M2 + CPI)
+    경제 데이터 조회 (M2 + CPI) - Supabase 저장 데이터 사용
     
     Query Parameters:
-    - start_date: 시작 날짜 (YYYY-MM-DD)
-    - end_date: 종료 날짜 (YYYY-MM-DD)
+    - scenario: 시나리오 (baseline, dovish, hawkish)
+    - refresh: FRED에서 새로 조회 (True일 때)
     """
     try:
-        fred = await get_fred_client()
-        data = await fred.get_m2_inflation_cpi()
+        # 새로고침 요청 시 FRED에서 데이터 가져오기
+        if refresh:
+            await populate_simshield_data()
         
-        if "error" in data:
-            raise HTTPException(status_code=500, detail=data["error"])
+        # Supabase에서 데이터 조회
+        data = await get_simshield_data(scenario=scenario)
+        
+        if not data:
+            return {
+                "status": "no_data",
+                "message": f"{scenario} 시나리오 데이터가 없습니다.",
+                "data": []
+            }
         
         return {
             "status": "success",
+            "scenario": scenario,
+            "count": len(data),
             "data": data,
             "note": "M2 = 통화량, CPI = 소비자물가지수"
         }

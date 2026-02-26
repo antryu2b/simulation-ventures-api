@@ -7,3 +7,5 @@ numpy==2.4.2
 python-dotenv==1.2.1
 httpx==0.28.1
 duckdb==1.4.4
+supabase==2.4.4
+postgrest-py==0.15.2
